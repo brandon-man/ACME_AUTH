@@ -22,8 +22,8 @@
         constructor() {
           super();
           this.state = {
-            username: '',
-            password: '',
+            username: "",
+            password: "",
           };
           this.onChange = this.onChange.bind(this);
           this.onSubmit = this.onSubmit.bind(this);
@@ -57,36 +57,43 @@
           super();
           this.state = {
             auth: {},
+            notes: [],
           };
           this.signIn = this.signIn.bind(this);
           this.logout = this.logout.bind(this);
         }
         logout() {
-          window.localStorage.removeItem('token');
+          window.localStorage.removeItem("token");
           this.setState({ auth: {} });
         }
         async attemptTokenLogin() {
-          const token = window.localStorage.getItem('token');
+          const token = window.localStorage.getItem("token");
           if (token) {
-            const response = await axios.get('/api/auth', {
+            const response = await axios.get("/api/auth", {
               headers: {
                 authorization: token,
               },
             });
-            this.setState({ auth: response.data });
+            const notes = await axios.get(`/api/users/notes`, {
+              headers: {
+                authorization: token,
+              },
+            });
+            this.setState({ auth: response.data, notes: notes });
           }
         }
         componentDidMount() {
           this.attemptTokenLogin();
         }
         async signIn(credentials) {
-          let response = await axios.post('/api/auth', credentials);
+          let response = await axios.post("/api/auth", credentials);
           const { token } = response.data;
-          window.localStorage.setItem('token', token);
+          window.localStorage.setItem("token", token);
           this.attemptTokenLogin();
         }
+
         render() {
-          const { auth } = this.state;
+          const { auth, notes } = this.state;
           const { signIn, logout } = this;
           if (!auth.id) {
             return <SignIn signIn={signIn} />;
@@ -94,13 +101,14 @@
             return (
               <div>
                 Welcome {auth.username}
+                <p>{notes.data[0].text}</p>
                 <button onClick={logout}>Logout</button>
               </div>
             );
           }
         }
       }
-      ReactDOM.render(<App />, document.querySelector('#root'));
+      ReactDOM.render(<App />, document.querySelector("#root"));
     </script>
   </body>
 </html>
